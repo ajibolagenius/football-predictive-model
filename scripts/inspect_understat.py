@@ -3,10 +3,12 @@ from bs4 import BeautifulSoup
 import json
 
 def inspect_league():
-    url = "https://understat.com/league/EPL/2025" # Use 2024 to ensure data exists
-    print(f"🕵️ Inspecting {url}...")
+    league = "Bundesliga"
+    season = "2025"
+    base_url = f"https://understat.com/league/{league}/{season}" # Use 2024 to ensure data exists
+    print(f"🕵️ Inspecting {base_url}...")
     
-    response = requests.get(url)
+    response = requests.get(base_url)
     soup = BeautifulSoup(response.content, 'html.parser')
     
     scripts = soup.find_all('script')

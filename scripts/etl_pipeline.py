@@ -121,32 +121,7 @@ def fetch_football_data_org(league_name):
 # --- 4. DATA STORAGE ENGINE ---
 # ... (Existing process_and_store code) ...
 
-if __name__ == "__main__":
-    start_date = "2025-08-11" 
-    end_date = "2026-05-20"
-    
-    logger.info("🚀 Starting Data Pipeline...")
-    
-    for league_name, league_id in LEAGUES.items():
-        logger.info(f"\n🌍 Processing {league_name}...")
-        
-        # 1. Try RapidAPI
-        matches = fetch_api_fixtures(league_id, start_date, end_date)
-        
-        # 2. Try Football-Data.org if RapidAPI failed
-        if not matches:
-            logger.warning("⚠️ RapidAPI failed/empty. Trying Football-Data.org...")
-            matches = fetch_football_data_org(league_name)
-            
-        # 3. Scrape Understat (Always needed for xG)
-        scraped_matches = scrape_understat_xg(league=league_name, season=str(SEASON))
-        
-        # 4. Process (matches can be from RapidAPI or FD Adapter)
-        # If matches is still empty, process_and_store will use Understat Fallback
-        if matches or scraped_matches:
-            process_and_store(matches, scraped_matches, league_name)
-        else:
-            logger.warning(f"⚠️ No data found for {league_name} (API, FD, or Scraper).")
+
 
 # --- 3. WEB SCRAPER ---
 def scrape_understat_xg(league="EPL", season="2025"):
@@ -350,11 +325,20 @@ if __name__ == "__main__":
     for league_name, league_id in LEAGUES.items():
         logger.info(f"\n🌍 Processing {league_name}...")
         
-        api_matches = fetch_api_fixtures(league_id, start_date, end_date)
+        # 1. Try RapidAPI
+        matches = fetch_api_fixtures(league_id, start_date, end_date)
+        
+        # 2. Try Football-Data.org if RapidAPI failed
+        if not matches:
+            logger.warning("⚠️ RapidAPI failed/empty. Trying Football-Data.org...")
+            matches = fetch_football_data_org(league_name)
+            
+        # 3. Scrape Understat (Always needed for xG)
         scraped_matches = scrape_understat_xg(league=league_name, season=str(SEASON))
         
-        # Pass both. Logic inside handles fallback.
-        if api_matches or scraped_matches:
-            process_and_store(api_matches, scraped_matches, league_name)
+        # 4. Process (matches can be from RapidAPI or FD Adapter)
+        # If matches is still empty, process_and_store will use Understat Fallback
+        if matches or scraped_matches:
+            process_and_store(matches, scraped_matches, league_name)
         else:
-            logger.warning(f"⚠️ No data found for {league_name} (API or Scraper).")
+            logger.warning(f"⚠️ No data found for {league_name} (API, FD, or Scraper).")
