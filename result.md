@@ -18,10 +18,10 @@ All core refactoring, robustness, scheduling, multi-league, UI polish, and direc
 - **Deployment:** No `Dockerfile` or `Procfile` exists for easy deployment.
 
 ### 🛠 Recommended Refactors
-1.  **Update Dashboard Strings:** Change "V4" to "V5" in UI.
-2.  **Centralize Configuration:** Move model version and common constants to `config.py`.
-3.  **Dynamic Feature Importance:** Save feature importance to a JSON file during training and load it in the dashboard.
-4.  **Dockerization:** Add a `Dockerfile` for containerized deployment.
+- [x] **Update Dashboard Strings:** Change "V4" to "V5" in UI.
+- [x] **Centralize Configuration:** Move model version and common constants to `config.py`.
+- [x] **Dynamic Feature Importance:** Save feature importance to a JSON file during training and load it in the dashboard.
+- [x] **Dockerization:** Add a `Dockerfile` for containerized deployment.
 
 
 
