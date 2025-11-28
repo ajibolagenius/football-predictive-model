@@ -120,10 +120,4 @@ The app will open in your browser at `http://localhost:8501`.
 
 ---
 
-## 📜 License
-
-This project is licensed under the MIT License.
-
----
-
 *(c) 2025 DON_GENIUS*
