@@ -5,6 +5,7 @@ import xgboost as xgb
 from sqlalchemy import create_engine, text
 import numpy as np
 import odds_integration
+import config
 
 # --- CONFIGURATION ---
 st.set_page_config(page_title="Football AI Oracle V4", layout="wide", page_icon="⚽")
@@ -17,7 +18,7 @@ def load_css(file_name):
 st.markdown('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">', unsafe_allow_html=True)
 load_css("styles.css")
 
-DB_CONNECTION = "postgresql://postgres@localhost:5432/football_prediction_db"
+DB_CONNECTION = config.DB_CONNECTION
 
 # --- CACHED FUNCTIONS ---
 @st.cache_resource
@@ -289,7 +290,9 @@ st.title("🏟️ The Culture AI (V4)")
 # Sidebar for API Key
 with st.sidebar:
     st.header("⚙️ Settings")
-    odds_api_key = st.text_input("Odds API Key", type="password", value="aea375a9fa00e5d5d1dc6b8d53e8f7d2", help="Get free key at the-odds-api.com")
+    # Use config key as default if available
+    default_key = config.ODDS_API_KEY if config.ODDS_API_KEY else ""
+    odds_api_key = st.text_input("Odds API Key", type="password", value=default_key, help="Get free key at the-odds-api.com")
 
 # Load Data
 df, elo_dict, form_dict, elo_hist_df = load_data()

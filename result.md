@@ -2,9 +2,6 @@
 
 ## 1. Remaining Refactoring & Enhancements
 
-### `dashboard.py`
-- **Configuration:** Move database connection strings and API keys to a `.env` file or a `config.py` module to avoid hardcoding.
-
 ### `etl_pipeline.py` & `scraper_pipeline.py`
 - **Enhancements:**
   - **Robustness:** Add retry logic for network requests and better logging for scraping failures.
@@ -12,10 +9,11 @@
 
 ## 2. Additional Features to Add
 
-- **Configuration Refactoring:** Securely manage API keys and DB credentials.
+- **More Leagues:** Expand beyond EPL to La Liga, Bundesliga, etc.
+- **Automated Scheduling:** Run scrapers automatically (e.g., via cron or a scheduler).
 
 ## 3. Next Recommended Task
 
-**👉 Configuration Refactoring**
-- **Why:** Hardcoding API keys (like the Odds API key) is a security risk.
-- **How:** Use `python-dotenv` to load secrets from a `.env` file.
+**👉 ETL Robustness**
+- **Why:** Scrapers are fragile. If a request fails, the pipeline breaks.
+- **How:** Implement a `requests` wrapper with `tenacity` or simple retries. Add logging to a file.

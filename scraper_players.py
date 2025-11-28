@@ -3,8 +3,9 @@ import json
 import pandas as pd
 from bs4 import BeautifulSoup
 from sqlalchemy import create_engine, text
+import config
 
-DB_CONNECTION = "postgresql://postgres@localhost:5432/football_prediction_db"
+DB_CONNECTION = config.DB_CONNECTION
 
 def get_db_engine():
     return create_engine(DB_CONNECTION)

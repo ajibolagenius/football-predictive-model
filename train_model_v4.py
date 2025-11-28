@@ -4,8 +4,9 @@ import sys
 import numpy as np
 from sqlalchemy import create_engine
 from sklearn.metrics import accuracy_score, classification_report
+import config
 
-DB_CONNECTION = "postgresql://postgres@localhost:5432/football_prediction_db"
+DB_CONNECTION = config.DB_CONNECTION
 
 def train_v4():
     engine = create_engine(DB_CONNECTION)
