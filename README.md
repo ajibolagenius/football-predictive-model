@@ -1,8 +1,8 @@
-# ⚽ The Culture Football AI Oracle
+# ⚽ The Culture AI Oracle
 
 **An AI-powered football analytics platform featuring a sleek Streamlit dashboard, advanced xG metrics, and machine learning models to forecast match outcomes and identify value bets.**
 
-The **Culture Football AI Oracle** is an end-to-end data science project that scrapes football match data, engineers advanced features (Elo, Rolling xG), and uses Random Forest classifiers to predict game results. It visualizes these insights through a modern, glassmorphism-styled interface designed for strategic betting analysis.
+The **Culture AI Oracle** is an end-to-end data science project that scrapes football match data, engineers advanced features (Elo, Rolling xG), and uses Random Forest classifiers to predict game results. It visualizes these insights through a modern, glassmorphism-styled interface designed for strategic betting analysis.
 
 ---
 
