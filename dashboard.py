@@ -314,10 +314,8 @@ def load_model():
     # Try loading V5, fallback to V4
     try:
         model.load_model("football_v5.json")
-        st.toast("✅ Loaded Model V5 (Advanced Squad Metrics)")
     except:
         model.load_model("football_v4.json")
-        st.toast("⚠️ Loaded Model V4 (Fallback)")
     return model
 
 def get_squad_stats(team_name):
