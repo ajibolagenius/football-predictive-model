@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+/* Global Settings */
+html,
+body,
+.stApp,
+[data-testid="stAppViewContainer"] {
+    font-family: 'Poppins', sans-serif !important;
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+/* Glassmorphism Card */
+.glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Headers */
+h1,
+h2,
+h3 {
+    font-family: 'Poppins', sans-serif !important;
+    color: #ffffff !important;
+}
+
+h1 {
+    font-weight: 600 !important;
+    font-size: 2.5rem !important;
+}
+
+h2 {
+    font-weight: 400 !important;
+    font-size: 1.8rem !important;
+    opacity: 0.9;
+}
+
+h3 {
+    font-weight: 300 !important;
+    font-size: 1.4rem !important;
+    opacity: 0.8;
+}
+
+/* Custom Button Styling */
+div.stButton>button {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+    backdrop-filter: blur(5px);
+}
+
+div.stButton>button:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Sidebar Styling */
+[data-testid="stSidebar"] {
+    background-color: #000000 !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Metric Delta Colors */
+[data-testid="stMetricDelta"] svg {
+    display: none;
+}
+
+[data-testid="stMetricDelta"]>div {
+    font-weight: bold;
+}
