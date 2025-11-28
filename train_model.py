@@ -67,4 +67,9 @@ def train_advanced_model():
     print("💾 Model saved to 'football_model.json'")
 
 if __name__ == "__main__":
-    train_advanced_model()
+    print("Starting training script...")
+    try:
+        train_advanced_model()
+        print("Training script finished.")
+    except Exception as e:
+        print(f"Error: {e}")

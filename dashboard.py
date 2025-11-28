@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+import xgboost as xgb
 from sqlalchemy import create_engine
-from sklearn.ensemble import RandomForestClassifier
+# from sklearn.ensemble import RandomForestClassifier # No longer needed
 
 # --- CONFIGURATION ---
 st.set_page_config(page_title="Football AI Oracle", layout="wide", page_icon="⚽")
@@ -196,16 +197,9 @@ def load_data():
     return df, current_elo, stats_dict, pd.DataFrame(elo_history)
 
 @st.cache_resource
-def train_model():
-    engine = get_db_engine()
-    # We reload model_features to ensure we train on the engineered features
-    df = pd.read_sql("SELECT * FROM model_features", engine)
-    
-    features = ['elo_diff', 'home_elo', 'away_elo', 'home_xg_last_5', 'away_xg_last_5', 'home_points_last_5', 'away_points_last_5']
-    target = 'target_home_win'
-    
-    model = RandomForestClassifier(n_estimators=200, random_state=42, max_depth=5)
-    model.fit(df[features], df[target])
+def load_model():
+    model = xgb.XGBClassifier()
+    model.load_model("football_model.json")
     return model
 
 def get_last_5_matches(team_name, full_df):
@@ -322,7 +316,7 @@ st.title("⚽︎ The Culture Football AI Oracle 🏟️")
 
 # Load Data
 df, elo_dict, form_dict, elo_hist_df = load_data()
-model = train_model()
+model = load_model()
 
 # --- SIDEBAR: CONFIG & CALCULATOR ---
 st.sidebar.header("1. Match Configuration")
@@ -335,7 +329,11 @@ st.sidebar.header("2. Betting Calculator (Kelly)")
 st.sidebar.info("Enter your bankroll and the bookie's odds to see the optimal stake.")
 
 bankroll = st.sidebar.number_input("Total Bankroll ($)", value=1000, step=100)
-odds = st.sidebar.number_input("Bookmaker Odds (Decimal)", value=2.00, step=0.01)
+    
+st.sidebar.markdown("### Odds Input")
+odds_home = st.sidebar.number_input("Home Odds", value=2.00, step=0.01)
+odds_draw = st.sidebar.number_input("Draw Odds", value=3.50, step=0.01)
+odds_away = st.sidebar.number_input("Away Odds", value=3.80, step=0.01)
 
 # --- PREDICTION LOGIC ---
 if home_team == away_team:
@@ -357,31 +355,56 @@ else:
         'away_points_last_5': a_form['points']
     }])
     
-    prob = model.predict_proba(input_data)[0][1]
+    # Predict Probabilities (Multi-Class: 0=Away, 1=Draw, 2=Home)
+    probs = model.predict_proba(input_data)[0]
+    prob_away = probs[0]
+    prob_draw = probs[1]
+    prob_home = probs[2]
     
-    # --- KELLY CRITERION CALCULATION ---
-    # Formula: f = (bp - q) / b
-    # b = decimal_odds - 1
-    # p = probability of winning (prob)
-    # q = probability of losing (1 - prob)
+    # --- VALUE CALCULATION ---
+    # EV = (Prob * Odds) - 1
+    ev_home = (prob_home * odds_home) - 1
+    ev_draw = (prob_draw * odds_draw) - 1
+    ev_away = (prob_away * odds_away) - 1
     
-    decimal_odds = odds
-    b = decimal_odds - 1
-    p = prob
-    q = 1 - p
+    # Find Best Value
+    best_ev = max(ev_home, ev_draw, ev_away)
     
-    kelly_fraction = (b * p - q) / b
-    
-    # Safety: Many bettors use "Half Kelly" or "Quarter Kelly" to reduce volatility
-    # We will show Full Kelly but capped at 0 (no negative bets)
-    if kelly_fraction < 0:
-        kelly_stake = 0
-        kelly_msg = "⛔ No Bet (Negative Value)"
+    if best_ev > 0:
+        if best_ev == ev_home:
+            bet_target = "Home Win"
+            bet_prob = prob_home
+            bet_odds = odds_home
+            rec_color = "#4ade80" # Green
+        elif best_ev == ev_draw:
+            bet_target = "Draw"
+            bet_prob = prob_draw
+            bet_odds = odds_draw
+            rec_color = "#facc15" # Yellow/Orange
+        else:
+            bet_target = "Away Win"
+            bet_prob = prob_away
+            bet_odds = odds_away
+            rec_color = "#f87171" # Red (using red for away usually, but here it means 'hot' value)
+            
+        # Kelly Calculation for the Best Bet
+        b = bet_odds - 1
+        p = bet_prob
+        q = 1 - p
+        kelly_fraction = (b * p - q) / b
+        kelly_stake = max(0, bankroll * kelly_fraction * 0.5) # Using Half Kelly for safety
+        
+        value_msg = f"✅ VALUE FOUND: {bet_target}"
+        rec_msg = f"Bet ${kelly_stake:.2f} (EV: {best_ev:.2f})"
+        implied_odds = 1/bet_prob
+        
     else:
-        kelly_stake = bankroll * kelly_fraction
-        kelly_msg = f"💰 Bet ${kelly_stake:.2f} ({kelly_fraction*100:.1f}%)"
+        value_msg = "❌ NO VALUE FOUND"
+        rec_msg = "Do Not Bet"
+        rec_color = "#888888"
+        implied_odds = 0
+        bet_odds = 0
 
-    # --- MAIN DISPLAY ---
     # --- MAIN DISPLAY ---
     # We use a custom layout with glass cards
     
@@ -409,33 +432,53 @@ else:
         st.markdown(f"<h3 style='text-align: center;'>{home_team}</h3>", unsafe_allow_html=True)
         st.markdown(glass_metric("Elo Rating", int(h_elo), int(h_elo - 1500), "fas fa-shield-alt"), unsafe_allow_html=True)
         st.markdown(glass_metric("Avg xG (Last 5)", f"{h_form['xg']:.2f}", None, "fas fa-bullseye"), unsafe_allow_html=True)
+        
+        # Home Prob
+        st.markdown(f"""
+            <div style="text-align: center; margin-top: 10px; color: #4ade80;">
+                <div style="font-size: 0.8rem;">Win Prob</div>
+                <div style="font-size: 1.5rem; font-weight: bold;">{prob_home:.1%}</div>
+                <div style="font-size: 0.7rem; color: #888;">EV: {ev_home:.2f}</div>
+            </div>
+        """, unsafe_allow_html=True)
     
     with col2:
         st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
         st.markdown("<div class='vs-text'>VS</div>", unsafe_allow_html=True)
         
-        # Probability Display in Glass
-        prob_color = '#4ade80' if prob > 0.55 else ('#facc15' if prob > 0.40 else '#f87171')
+        # Draw Prob (Center)
         st.markdown(f"""
-            <div class="glass-card" style="text-align: center;">
-                <div style="font-size: 0.9rem; color: rgba(255,255,255,0.6); text-transform: uppercase; margin-bottom: 5px;">
-                    <i class="fas fa-chart-pie"></i> Home Win Probability
-                </div>
-                <div style="font-size: 3.5rem; font-weight: 700; color: {prob_color}; text-shadow: 0 0 20px {prob_color}40;">
-                    {prob:.1%}
-                </div>
+            <div style="text-align: center; margin-bottom: 20px; color: #facc15;">
+                <span style="font-size: 0.9rem;">Draw: <b>{prob_draw:.1%}</b> (EV: {ev_draw:.2f})</span>
             </div>
         """, unsafe_allow_html=True)
         
-        # Kelly Recommendation Box in Glass
-        kelly_color = "#4ade80" if kelly_fraction >= 0 else "#f87171"
+        # Value Strategy Box
         st.markdown(f"""
-        <div class="glass-card" style="border: 1px solid {kelly_color}40;">
-            <div class="metric-label"><i class="fas fa-coins"></i> Kelly Recommendation (@ {odds})</div>
-            <div style="font-size: 1.2rem; font-weight: 700; color: {kelly_color}; margin-top: 10px;">
-                {kelly_msg}
+        <div class="glass-card" style="border: 1px solid {rec_color}; box-shadow: 0 0 15px {rec_color}40;">
+            <div class="metric-label"><i class="fas fa-coins"></i> AI Recommendation</div>
+            <div style="font-size: 1.2rem; color: #ffffff; margin-top: 5px; font-weight: 600;">{value_msg}</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: {rec_color}; margin-top: 5px;">
+                {rec_msg}
+            </div>
+            <div style="font-size: 0.8rem; color: #aaa; margin-top: 10px;">
+                Model Odds: {implied_odds:.2f} | Bookie: {bet_odds:.2f}
             </div>
         </div>
+        """, unsafe_allow_html=True)
+
+    with col3:
+        st.markdown(f"<h3 style='text-align: center;'>{away_team}</h3>", unsafe_allow_html=True)
+        st.markdown(glass_metric("Elo Rating", int(a_elo), int(a_elo - 1500), "fas fa-shield-alt"), unsafe_allow_html=True)
+        st.markdown(glass_metric("Avg xG (Last 5)", f"{a_form['xg']:.2f}", None, "fas fa-bullseye"), unsafe_allow_html=True)
+        
+        # Away Prob
+        st.markdown(f"""
+            <div style="text-align: center; margin-top: 10px; color: #f87171;">
+                <div style="font-size: 0.8rem;">Win Prob</div>
+                <div style="font-size: 1.5rem; font-weight: bold;">{prob_away:.1%}</div>
+                <div style="font-size: 0.7rem; color: #888;">EV: {ev_away:.2f}</div>
+            </div>
         """, unsafe_allow_html=True)
 
     with col3:
