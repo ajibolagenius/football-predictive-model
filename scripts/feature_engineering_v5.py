@@ -91,29 +91,44 @@ def process_features_v5():
     # No, cleaner to rebuild.
     
     # Rolling Stats
-    h_stats = df[['date', 'match_id', 'home_team_id', 'home_ppda', 'home_deep', 'home_xg']].rename(columns={'home_team_id':'team', 'home_ppda':'ppda', 'home_deep':'deep', 'home_xg':'xg'})
-    a_stats = df[['date', 'match_id', 'away_team_id', 'away_ppda', 'away_deep', 'away_xg']].rename(columns={'away_team_id':'team', 'away_ppda':'ppda', 'away_deep':'deep', 'away_xg':'xg'})
+    h_stats = df[['date', 'match_id', 'home_team_id', 'home_ppda', 'home_deep', 'home_xg', 'home_goals', 'away_goals']].rename(
+        columns={'home_team_id':'team', 'home_ppda':'ppda', 'home_deep':'deep', 'home_xg':'xg', 'home_goals': 'goals_scored', 'away_goals': 'goals_conceded'}
+    )
+    a_stats = df[['date', 'match_id', 'away_team_id', 'away_ppda', 'away_deep', 'away_xg', 'away_goals', 'home_goals']].rename(
+        columns={'away_team_id':'team', 'away_ppda':'ppda', 'away_deep':'deep', 'away_xg':'xg', 'away_goals': 'goals_scored', 'home_goals': 'goals_conceded'}
+    )
     all_stats = pd.concat([h_stats, a_stats]).sort_values(['team', 'date'])
     
-    for col in ['ppda', 'deep', 'xg']:
+    for col in ['ppda', 'deep', 'xg', 'goals_scored', 'goals_conceded']:
         all_stats[f'avg_{col}_5'] = all_stats.groupby('team')[col].transform(lambda x: x.rolling(5, min_periods=1).mean().shift(1))
         
-    cols = ['match_id', 'team', 'avg_ppda_5', 'avg_deep_5', 'avg_xg_5']
-    df = df.merge(all_stats[cols], left_on=['match_id', 'home_team_id'], right_on=['match_id', 'team'], how='left').rename(columns={'avg_ppda_5': 'home_ppda_5', 'avg_deep_5': 'home_deep_5', 'avg_xg_5': 'home_xg_5'}).drop('team', axis=1)
-    df = df.merge(all_stats[cols], left_on=['match_id', 'away_team_id'], right_on=['match_id', 'team'], how='left').rename(columns={'avg_ppda_5': 'away_ppda_5', 'avg_deep_5': 'away_deep_5', 'avg_xg_5': 'away_xg_5'}).drop('team', axis=1)
+    cols = ['match_id', 'team', 'avg_ppda_5', 'avg_deep_5', 'avg_xg_5', 'avg_goals_scored_5', 'avg_goals_conceded_5']
+    
+    df = df.merge(all_stats[cols], left_on=['match_id', 'home_team_id'], right_on=['match_id', 'team'], how='left').rename(columns={
+        'avg_ppda_5': 'home_ppda_5', 'avg_deep_5': 'home_deep_5', 'avg_xg_5': 'home_xg_5',
+        'avg_goals_scored_5': 'home_goals_scored_5', 'avg_goals_conceded_5': 'home_goals_conceded_5'
+    }).drop('team', axis=1)
+    
+    df = df.merge(all_stats[cols], left_on=['match_id', 'away_team_id'], right_on=['match_id', 'team'], how='left').rename(columns={
+        'avg_ppda_5': 'away_ppda_5', 'avg_deep_5': 'away_deep_5', 'avg_xg_5': 'away_xg_5',
+        'avg_goals_scored_5': 'away_goals_scored_5', 'avg_goals_conceded_5': 'away_goals_conceded_5'
+    }).drop('team', axis=1)
     
     # Rest Days
     df['date'] = pd.to_datetime(df['date'])
-    # ... (Rest calculation omitted for brevity, using default 7 if missing)
     df['home_rest'] = 7
     df['away_rest'] = 7
 
-    # Target
+    # Targets
     def get_res(row):
         if row['home_goals'] > row['away_goals']: return 2
         elif row['home_goals'] == row['away_goals']: return 1
         else: return 0
     df['match_result'] = df.apply(get_res, axis=1)
+    
+    # New Targets
+    df['target_over_2_5'] = ((df['home_goals'] + df['away_goals']) > 2.5).astype(int)
+    df['target_btts'] = ((df['home_goals'] > 0) & (df['away_goals'] > 0)).astype(int)
     
     df.dropna(subset=['match_result'], inplace=True)
     

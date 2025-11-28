@@ -82,14 +82,14 @@ def load_data(league="EPL"):
     # We need to restructure to a long format (team, date, stats) to use rolling
     
     # Prepare Home Rows
-    h_df = df[['date', 'home_name', 'home_xg', 'home_ppda', 'home_deep', 'home_goals']].rename(
-        columns={'home_name': 'team', 'home_xg': 'xg', 'home_ppda': 'ppda', 'home_deep': 'deep', 'home_goals': 'goals'}
+    h_df = df[['date', 'home_name', 'home_xg', 'home_ppda', 'home_deep', 'home_goals', 'away_goals']].rename(
+        columns={'home_name': 'team', 'home_xg': 'xg', 'home_ppda': 'ppda', 'home_deep': 'deep', 'home_goals': 'goals_scored', 'away_goals': 'goals_conceded'}
     )
     h_df['is_home'] = True
     
     # Prepare Away Rows
-    a_df = df[['date', 'away_name', 'away_xg', 'away_ppda', 'away_deep', 'away_goals']].rename(
-        columns={'away_name': 'team', 'away_xg': 'xg', 'away_ppda': 'ppda', 'away_deep': 'deep', 'away_goals': 'goals'}
+    a_df = df[['date', 'away_name', 'away_xg', 'away_ppda', 'away_deep', 'away_goals', 'home_goals']].rename(
+        columns={'away_name': 'team', 'away_xg': 'xg', 'away_ppda': 'ppda', 'away_deep': 'deep', 'away_goals': 'goals_scored', 'home_goals': 'goals_conceded'}
     )
     a_df['is_home'] = False
     
@@ -109,7 +109,8 @@ def load_data(league="EPL"):
         team_data['roll_xg'] = team_data['xg'].rolling(5, min_periods=1).mean()
         team_data['roll_ppda'] = team_data['ppda'].rolling(5, min_periods=1).mean()
         team_data['roll_deep'] = team_data['deep'].rolling(5, min_periods=1).mean()
-        team_data['roll_goals'] = team_data['goals'].rolling(5, min_periods=1).mean()
+        team_data['roll_goals_scored'] = team_data['goals_scored'].rolling(5, min_periods=1).mean()
+        team_data['roll_goals_conceded'] = team_data['goals_conceded'].rolling(5, min_periods=1).mean()
         
         # Get the LATEST stats (tail 1)
         if not team_data.empty:
@@ -118,10 +119,11 @@ def load_data(league="EPL"):
                 'xg_5': latest['roll_xg'],
                 'ppda_5': latest['roll_ppda'],
                 'deep_5': latest['roll_deep'],
-                'goals_5': latest['roll_goals']
+                'goals_scored_5': latest['roll_goals_scored'],
+                'goals_conceded_5': latest['roll_goals_conceded']
             }
         else:
-            stats_dict[team] = {'xg_5': 0, 'ppda_5': 0, 'deep_5': 0, 'goals_5': 0}
+            stats_dict[team] = {'xg_5': 0, 'ppda_5': 0, 'deep_5': 0, 'goals_scored_5': 0, 'goals_conceded_5': 0}
         
     return df, current_elo, stats_dict, pd.DataFrame(elo_history)
 
