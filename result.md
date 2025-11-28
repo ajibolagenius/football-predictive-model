@@ -6,10 +6,11 @@ All core refactoring, robustness, scheduling, multi-league, UI polish, and direc
 
 ## 2. Additional Features to Add
 
-- **Advanced Metrics:** Expected Threat (xT), Passing Networks.
+- **Advanced Metrics:** Expected Threat (xT) - *Partially implemented via xGChain/xGBuildup*, Passing Networks.
+- **Data Sources:** Add more data sources to the pipeline.
 
 ## 3. Next Recommended Task
 
-**👉 Advanced Metrics**
-- **Why:** Provide deeper tactical insights.
-- **How:** Scrape xT data (if available) or calculate it from event data (requires event-level data source).
+**👉 Passing Networks**
+- **Why:** Visualize team passing structure.
+- **How:** Requires event-level data (passer, receiver, location). Hard to scrape from Understat. Might need a new source or manual event logging.
