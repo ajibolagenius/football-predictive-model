@@ -68,16 +68,23 @@ def sync_players_db():
                         # Fallback mapping if exact match fails
                         if not team_id:
                             # Try simple replacements
-                            if team_name == "Manchester United": team_id = team_map.get("Manchester United")
-                            elif team_name == "Newcastle United": team_id = team_map.get("Newcastle")
-                            elif team_name == "Wolverhampton Wanderers": team_id = team_map.get("Wolves")
-                            elif team_name == "West Ham": team_id = team_map.get("West Ham")
-                            elif team_name == "Tottenham": team_id = team_map.get("Tottenham")
-                            elif team_name == "Brighton": team_id = team_map.get("Brighton")
-                            # Add more mappings as needed
+                            if team_name == "Manchester United": team_id = team_map.get("Manchester United FC") or team_map.get("Man United")
+                            elif team_name == "Newcastle United": team_id = team_map.get("Newcastle United FC")
+                            elif team_name == "Wolverhampton Wanderers": team_id = team_map.get("Wolverhampton Wanderers FC")
+                            elif team_name == "West Ham": team_id = team_map.get("West Ham United FC")
+                            elif team_name == "Tottenham": team_id = team_map.get("Tottenham Hotspur FC")
+                            elif team_name == "Brighton": team_id = team_map.get("Brighton & Hove Albion FC")
+                            
+                            # Fuzzy Match
+                            if not team_id:
+                                import difflib
+                                matches = difflib.get_close_matches(team_name, team_map.keys(), n=1, cutoff=0.6)
+                                if matches:
+                                    team_id = team_map.get(matches[0])
+                                    logger.info(f"🔗 Fuzzy mapped '{team_name}' -> '{matches[0]}'")
                         
                         if not team_id:
-                            # logger.warning(f"⚠️ Could not map team '{team_name}' for player '{p['player_name']}'. Skipping.")
+                            logger.warning(f"⚠️ Could not map team '{team_name}' for player '{p['player_name']}'. Skipping.")
                             continue
 
                         # 2. Insert Player
