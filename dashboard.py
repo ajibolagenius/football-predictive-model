@@ -6,6 +6,7 @@ from sqlalchemy import create_engine, text
 import numpy as np
 import odds_integration
 import config
+from streamlit_extras.metric_cards import style_metric_cards
 
 # --- CONFIGURATION ---
 st.set_page_config(page_title="Football AI Oracle V4", layout="wide", page_icon="⚽")
@@ -26,26 +27,25 @@ def get_db_engine():
     return create_engine(DB_CONNECTION)
 
 @st.cache_data
-def load_data():
-    """Loads all match data and calculates current stats (Elo, Form, Tactics)."""
+def load_data(league="EPL"):
+    """Loads all match data and calculates current stats."""
     engine = get_db_engine()
     
-    # 1. Load History with Tactical Stats
+    # 1. Load History
     query = """
     SELECT 
         m.date, m.match_id, m.home_team_id, m.away_team_id,
         m.home_goals, m.away_goals,
         s.home_xg, s.away_xg,
-        s.home_ppda, s.away_ppda,
-        s.home_deep, s.away_deep,
         t_home.name as home_name, t_away.name as away_name
     FROM matches m
     JOIN match_stats s ON m.match_id = s.match_id
     JOIN teams t_home ON m.home_team_id = t_home.team_id
     JOIN teams t_away ON m.away_team_id = t_away.team_id
+    WHERE m.league = :league
     ORDER BY m.date ASC;
     """
-    df = pd.read_sql(query, engine)
+    df = pd.read_sql(text(query), engine, params={"league": league})
     
     # 2. Calculate Elo
     current_elo = {}
@@ -266,7 +266,7 @@ def get_league_table(full_df):
     
     return df_table
 
-def get_top_players(limit=10):
+def get_top_players(league="EPL", limit=10):
     """Fetches top scorers for the current season."""
     engine = get_db_engine()
     try:
@@ -275,11 +275,11 @@ def get_top_players(limit=10):
         FROM player_season_stats s
         JOIN players p ON s.player_id = p.player_id
         JOIN teams t ON p.team_id = t.team_id
-        WHERE s.season = '2025'
+        WHERE s.season = '2025' AND t.league = :league
         ORDER BY s.goals DESC
         LIMIT :limit
         """
-        return pd.read_sql(text(query), engine, params={"limit": limit})
+        return pd.read_sql(text(query), engine, params={"limit": limit, "league": league})
     except Exception as e:
         st.error(f"DB Error: {e}")
         return pd.DataFrame()
@@ -290,13 +290,20 @@ st.title("🏟️ The Culture AI (V4)")
 # Sidebar for API Key
 with st.sidebar:
     st.header("⚙️ Settings")
+    
+    # League Selector
+    selected_league = st.selectbox("Select League", ["EPL", "La_Liga", "Bundesliga"])
+    
     # Use config key as default if available
     default_key = config.ODDS_API_KEY if config.ODDS_API_KEY else ""
     odds_api_key = st.text_input("Odds API Key", type="password", value=default_key, help="Get free key at the-odds-api.com")
 
 # Load Data
-df, elo_dict, form_dict, elo_hist_df = load_data()
+df, elo_dict, form_dict, elo_hist_df = load_data(selected_league)
 model = load_model()
+
+# Style Cards
+style_metric_cards(border_left_color="#1E88E5", background_color="#1E1E1E", border_size_px=1, border_color="#333")
 
 # --- CONTROL PANEL ---
 st.markdown("### ⚙️ Match Configuration")
@@ -580,7 +587,7 @@ elif model is not None:
         st.dataframe(get_league_table(df), use_container_width=True)
         
     with tab_players:
-        top_players = get_top_players(15)
+        top_players = get_top_players(selected_league, 15)
         if not top_players.empty:
             st.dataframe(top_players, use_container_width=True)
         else:

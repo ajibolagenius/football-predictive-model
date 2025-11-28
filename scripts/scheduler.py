@@ -20,13 +20,17 @@ def run_script(script_name):
     """Runs a python script and logs the output."""
     logger.info(f"🚀 Starting {script_name}...")
     try:
+        # Resolve script path
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        script_path = os.path.join(script_dir, script_name)
+        
         # Use the venv python if available, else system python
-        python_executable = "python3" 
-        if os.path.exists("venv/bin/python"):
-            python_executable = "venv/bin/python"
+        # Check relative to script_dir (which is scripts/) -> ../venv
+        venv_python = os.path.join(script_dir, '..', 'venv', 'bin', 'python')
+        python_executable = venv_python if os.path.exists(venv_python) else "python3"
             
         result = subprocess.run(
-            [python_executable, script_name],
+            [python_executable, script_path],
             capture_output=True,
             text=True,
             check=True

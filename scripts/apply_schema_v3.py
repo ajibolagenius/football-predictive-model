@@ -1,4 +1,10 @@
 from sqlalchemy import create_engine, text
+import sys
+import os
+
+# Add parent directory to path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import config
 
 DB_CONNECTION = config.DB_CONNECTION
@@ -6,7 +12,11 @@ DB_CONNECTION = config.DB_CONNECTION
 def apply_schema():
     engine = create_engine(DB_CONNECTION)
     print("Applying Schema V3 (Leagues)...")
-    with open("schema_v3.sql", "r") as f:
+    
+    # Path to SQL file
+    sql_path = os.path.join(os.path.dirname(__file__), '..', 'sql', 'schema_v3.sql')
+    
+    with open(sql_path, "r") as f:
         sql = f.read()
         
     with engine.connect() as conn:

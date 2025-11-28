@@ -3,6 +3,12 @@ import json
 import pandas as pd
 from bs4 import BeautifulSoup
 from sqlalchemy import create_engine, text
+import sys
+import os
+
+# Add parent directory to path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import config
 from utils import fetch_url, logger
 
