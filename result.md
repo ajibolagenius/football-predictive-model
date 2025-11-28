@@ -12,11 +12,10 @@
 
 ## 2. Additional Features to Add
 
-- **Live Odds Integration:** Instead of manual input, integrate with a free/freemium Odds API to fetch real-time bookmaker odds.
 - **Player-Level Analytics:** If data permits, add a section for top scorers, assist leaders, and player xG performance.
 
 ## 3. Next Recommended Task
 
-**👉 Live Odds Integration**
-- **Why:** Manual input of odds is tedious. Automating this ensures the "Value Bet" calculation is always up-to-date and accurate.
-- **How:** Sign up for a free API (e.g., The Odds API), create a `fetch_odds` function, and auto-populate the odds fields in the dashboard.
+**👉 Player-Level Analytics**
+- **Why:** Understanding individual player form is crucial for match prediction (e.g., is the top scorer injured?).
+- **How:** If player data is available in the database, create a "Top Players" section in the dashboard showing goals, assists, and xG per 90.

@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 import xgboost as xgb
 from sqlalchemy import create_engine
 import numpy as np
+import odds_integration
 
 # --- CONFIGURATION ---
 st.set_page_config(page_title="Football AI Oracle V4", layout="wide", page_icon="⚽")
@@ -267,6 +268,11 @@ def get_league_table(full_df):
 # --- MAIN UI ---
 st.title("🏟️ The Culture AI (V4)")
 
+# Sidebar for API Key
+with st.sidebar:
+    st.header("⚙️ Settings")
+    odds_api_key = st.text_input("Odds API Key", type="password", help="Get free key at the-odds-api.com")
+
 # Load Data
 df, elo_dict, form_dict, elo_hist_df = load_data()
 model = load_model()
@@ -293,10 +299,25 @@ with st.container():
         bankroll = st.number_input("Bankroll (₦)", value=1000, step=100)
     with c_odds:
         st.caption("Bookie Odds (for Value Calculation)")
+        
+        # Live Odds Logic
+        def_h, def_d, def_a = 2.00, 3.50, 3.80
+        if odds_api_key:
+            with st.spinner("Fetching live odds..."):
+                odds_df = odds_integration.fetch_live_odds(odds_api_key)
+                match_odds = odds_integration.map_teams(home_team, away_team, odds_df)
+                if match_odds is not None:
+                    def_h = match_odds['home_odd']
+                    def_d = match_odds['draw_odd']
+                    def_a = match_odds['away_odd']
+                    st.success(f"✅ Live Odds: {match_odds['bookmaker']}")
+                else:
+                    st.warning("Match not found in live odds.")
+
         oc1, oc2, oc3 = st.columns(3)
-        with oc1: odds_home = st.number_input("Home Odds", value=2.00, step=0.01)
-        with oc2: odds_draw = st.number_input("Draw Odds", value=3.50, step=0.01)
-        with oc3: odds_away = st.number_input("Away Odds", value=3.80, step=0.01)
+        with oc1: odds_home = st.number_input("Home Odds", value=float(def_h), step=0.01)
+        with oc2: odds_draw = st.number_input("Draw Odds", value=float(def_d), step=0.01)
+        with oc3: odds_away = st.number_input("Away Odds", value=float(def_a), step=0.01)
 
 st.divider()
 
