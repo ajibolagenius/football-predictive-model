@@ -39,9 +39,18 @@ st.markdown("""
             color: #ffffff !important;
         }
 
+        h1#the-culture-ai {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
         h1 { font-weight: 600 !important; font-size: 2.5rem !important; }
         h2 { font-weight: 400 !important; font-size: 1.8rem !important; opacity: 0.9; }
-        h3 { font-weight: 300 !important; font-size: 1.4rem !important; opacity: 0.8; }
+        h3 { font-weight: 300 !important; font-size: 1.4rem !important; opacity: 0.8; text-align: center; }
 
         /* Metrics in Glass */
         .metric-container {
