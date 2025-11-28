@@ -37,6 +37,8 @@ def load_data(league="EPL"):
         m.date, m.match_id, m.home_team_id, m.away_team_id,
         m.home_goals, m.away_goals,
         s.home_xg, s.away_xg,
+        s.home_ppda, s.away_ppda,
+        s.home_deep, s.away_deep,
         t_home.name as home_name, t_away.name as away_name
     FROM matches m
     JOIN match_stats s ON m.match_id = s.match_id
@@ -300,6 +302,11 @@ with st.sidebar:
 
 # Load Data
 df, elo_dict, form_dict, elo_hist_df = load_data(selected_league)
+
+if df.empty:
+    st.warning(f"⚠️ No match data found for **{selected_league}**. Please run `python3 scripts/etl_pipeline.py` to fetch data.")
+    st.stop()
+
 model = load_model()
 
 # Style Cards

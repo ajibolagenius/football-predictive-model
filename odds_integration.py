@@ -82,12 +82,15 @@ def fetch_live_odds(api_key, sport_key=DEFAULT_SPORT):
 
 def map_teams(local_home, local_away, odds_df):
     """
-    Attempts to find the matching row in odds_df for the selected local teams.
-    Simple fuzzy matching or direct containment.
+    Attempts to map dashboard team names to API team names.
+    Very basic fuzzy matching (substring).
     """
     if odds_df is None or odds_df.empty:
         return None
         
+    if not local_home or not local_away:
+        return None
+
     # 1. Try exact match
     match = odds_df[
         (odds_df['home_team'] == local_home) & 
