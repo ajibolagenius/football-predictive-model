@@ -3,8 +3,10 @@ import json
 import time
 from bs4 import BeautifulSoup
 from sqlalchemy import create_engine, text
+import config
+from utils import fetch_url, logger
 
-DB_CONNECTION = "postgresql://postgres@localhost:5432/football_prediction_db"
+DB_CONNECTION = config.DB_CONNECTION
 SEASONS = ["2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025"]
 
 # --- MANUAL MAPPING (The Fix) ---
@@ -47,7 +49,7 @@ def get_understat_slugs(season):
     """Fetches Understat team slugs for a season."""
     url = f"https://understat.com/league/EPL/{season}"
     try:
-        response = requests.get(url)
+        response = fetch_url(url)
         soup = BeautifulSoup(response.content, 'html.parser')
         scripts = soup.find_all('script')
         for script in scripts:
@@ -57,14 +59,14 @@ def get_understat_slugs(season):
                 # Return list of 'title' (e.g. 'Manchester_United')
                 return [t['title'].replace(' ', '_') for t in data.values()]
     except Exception as e:
-        print(f"❌ Error fetching team list: {e}")
+        logger.error(f"❌ Error fetching team list: {e}")
     return []
 
 def scrape_team_tactics(team_slug, season):
     url = f"https://understat.com/team/{team_slug}/{season}"
-    print(f"   🕵️‍♀️ Parsing {team_slug} ({season})...")
+    logger.info(f"   🕵️‍♀️ Parsing {team_slug} ({season})...")
     try:
-        response = requests.get(url)
+        response = fetch_url(url)
         soup = BeautifulSoup(response.content, 'html.parser')
         scripts = soup.find_all('script')
         for script in scripts:
@@ -83,7 +85,7 @@ def update_database_tactics():
         db_teams = [r[0] for r in conn.execute(text("SELECT name FROM teams")).fetchall()]
 
     for season in SEASONS:
-        print(f"\n📅 Season {season}...")
+        logger.info(f"\n📅 Season {season}...")
         slugs = get_understat_slugs(season)
         
         for slug in slugs:
@@ -103,7 +105,7 @@ def update_database_tactics():
                             break
             
             if not db_name:
-                print(f"   ⚠️ Could not map '{slug}' to Database. Skipping.")
+                logger.warning(f"   ⚠️ Could not map '{slug}' to Database. Skipping.")
                 continue
 
             # Scrape
@@ -151,10 +153,10 @@ def update_database_tactics():
                     except Exception:
                         continue
                 conn.commit()
-            print(f"      ✅ Updated {updates} matches for {db_name}")
+            logger.info(f"      ✅ Updated {updates} matches for {db_name}")
             time.sleep(0.5)
 
-    print("\n🎉 Tactical Data Sync Complete!")
+    logger.info("\n🎉 Tactical Data Sync Complete!")
 
 if __name__ == "__main__":
     update_database_tactics()

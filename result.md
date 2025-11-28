@@ -2,18 +2,15 @@
 
 ## 1. Remaining Refactoring & Enhancements
 
-### `etl_pipeline.py` & `scraper_pipeline.py`
-- **Enhancements:**
-  - **Robustness:** Add retry logic for network requests and better logging for scraping failures.
-  - **Data Validation:** Implement checks to ensure scraped data is within expected ranges before saving to the database.
+All core refactoring, robustness, and scheduling tasks are complete.
 
 ## 2. Additional Features to Add
 
 - **More Leagues:** Expand beyond EPL to La Liga, Bundesliga, etc.
-- **Automated Scheduling:** Run scrapers automatically (e.g., via cron or a scheduler).
+- **Advanced Metrics:** Expected Threat (xT), Passing Networks.
 
 ## 3. Next Recommended Task
 
-**👉 ETL Robustness**
-- **Why:** Scrapers are fragile. If a request fails, the pipeline breaks.
-- **How:** Implement a `requests` wrapper with `tenacity` or simple retries. Add logging to a file.
+**👉 More Leagues**
+- **Why:** Expand the model's coverage to other major European leagues.
+- **How:** Update `scraper_pipeline.py` to iterate through a list of leagues (e.g., `['EPL', 'La_Liga', 'Bundesliga']`).

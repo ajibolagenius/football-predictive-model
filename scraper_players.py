@@ -4,6 +4,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from sqlalchemy import create_engine, text
 import config
+from utils import fetch_url, logger
 
 DB_CONNECTION = config.DB_CONNECTION
 
@@ -11,10 +12,10 @@ def get_db_engine():
     return create_engine(DB_CONNECTION)
 
 def scrape_players(season="2025"):
-    print(f"🕵️‍♀️ Scraping Players for {season}...")
+    logger.info(f"🕵️‍♀️ Scraping Players for {season}...")
     url = f"https://understat.com/league/EPL/{season}"
     try:
-        response = requests.get(url)
+        response = fetch_url(url)
         soup = BeautifulSoup(response.content, 'html.parser')
         scripts = soup.find_all('script')
         
@@ -25,7 +26,7 @@ def scrape_players(season="2025"):
                 data = json.loads(json_string.encode('utf8').decode('unicode_escape'))
                 return data
     except Exception as e:
-        print(f"❌ Error: {e}")
+        logger.error(f"❌ Error: {e}")
     return []
 
 def sync_players_db():
@@ -33,17 +34,17 @@ def sync_players_db():
     players_data = scrape_players("2025") # Current Season
     
     if not players_data:
-        print("❌ No player data found.")
+        logger.error("❌ No player data found.")
         return
 
-    print(f"📥 Found {len(players_data)} players. Syncing to DB...")
+    logger.info(f"📥 Found {len(players_data)} players. Syncing to DB...")
     
     # Pre-fetch teams to map names to IDs
     try:
         with engine.connect() as conn:
             teams = pd.read_sql("SELECT team_id, name FROM teams", conn)
     except Exception as e:
-        print(f"❌ DB Error (Is Schema Applied?): {e}")
+        logger.error(f"❌ DB Error (Is Schema Applied?): {e}")
         return
     
     # Create a map: "Manchester United" -> ID
@@ -132,7 +133,7 @@ def sync_players_db():
         
         conn.commit()
         
-    print(f"✅ Sync Complete. New Players: {new_players}, Stats Updated: {updates}")
+    logger.info(f"✅ Sync Complete. New Players: {new_players}, Stats Updated: {updates}")
 
 if __name__ == "__main__":
     sync_players_db()
