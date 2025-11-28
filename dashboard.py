@@ -5,7 +5,98 @@ from sqlalchemy import create_engine
 from sklearn.ensemble import RandomForestClassifier
 
 # --- CONFIGURATION ---
-st.set_page_config(page_title="Football AI Oracle", layout="wide")
+st.set_page_config(page_title="Football AI Oracle", layout="wide", page_icon="⚽")
+
+# --- CUSTOM CSS ---
+st.markdown("""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        /* Global Settings */
+        html, body, .stApp, [data-testid="stAppViewContainer"] {
+            font-family: 'Poppins', sans-serif !important;
+        }
+        
+        /* Headers */
+        h1, h2, h3 {
+            font-family: 'Poppins', sans-serif !important;
+        }
+
+        h1 {
+            font-weight: 500 !important;
+        }
+        
+
+        h2, h3 {
+            font-weight: 300 !important;
+        }
+
+        /* Metrics */
+        [data-testid="stMetricValue"] {
+            font-size: 2rem !important;
+        }
+        
+        /* Custom Card for Kelly Recommendation */
+        .kelly-card {
+            background-color: #1e2329; /* Darker card background */
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #30363d;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            margin-top: 20px;
+        }
+        .kelly-title {
+            font-size: 1.0rem;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        .kelly-value {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #2ea043; /* Success green */
+            margin-top: 10px;
+            display: block;
+        }
+        .kelly-no-bet {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #da3633; /* Danger red */
+            margin-top: 10px;
+            display: block;
+        }
+        
+        /* Footer */
+        .footer {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            background-color: #0e1117;
+            color: #8b949e;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.8rem;
+            border-top: 1px solid #30363d;
+            z-index: 100;
+        }
+
+        /* VS Text */
+        .vs-text {
+            font-size: 4rem;
+            font-weight: 900;
+            background: -webkit-linear-gradient(45deg, #ff6b6b, #f06595);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 DB_CONNECTION = "postgresql://postgres@localhost:5432/football_prediction_db"
 
 # --- CACHED FUNCTIONS ---
@@ -211,18 +302,23 @@ else:
         st.write(f"**Avg xG:** {h_form['xg']:.2f}")
     
     with col2:
-        st.markdown("<h1 style='text-align: center;'>VS</h1>", unsafe_allow_html=True)
+        st.markdown("<div class='vs-text'>VS</div>", unsafe_allow_html=True)
         
         # Probability Display
-        color = 'green' if prob > 0.55 else ('orange' if prob > 0.40 else 'red')
-        st.markdown(f"<h2 style='text-align: center; color: {color};'>{prob:.1%}</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center;'>Home Win Probability</p>", unsafe_allow_html=True)
+        prob_color = '#2ea043' if prob > 0.55 else ('#d29922' if prob > 0.40 else '#da3633')
+        st.markdown(f"""
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 3rem; font-weight: 700; color: {prob_color};">{prob:.1%}</div>
+                <div style="color: #8b949e; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Home Win Probability</div>
+            </div>
+        """, unsafe_allow_html=True)
         
         # Kelly Recommendation Box
+        kelly_class = "kelly-value" if kelly_fraction >= 0 else "kelly-no-bet"
         st.markdown(f"""
-        <div style="background-color: #f0f2f6; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #ddd;">
-            <strong>Kelly Recommendation (@ {odds})</strong><br>
-            <span style="font-size: 20px; color: #333;">{kelly_msg}</span>
+        <div class="kelly-card">
+            <div class="kelly-title">Kelly Recommendation (@ {odds})</div>
+            <div class="{kelly_class}">{kelly_msg}</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -253,9 +349,22 @@ else:
     chart_data = elo_hist_df[elo_hist_df['team'].isin([home_team, away_team])]
     
     fig = go.Figure()
-    for team, color in zip([home_team, away_team], ['blue', 'red']):
+    colors = ['#58a6ff', '#ff6b6b'] # Blue and Red/Pinkish to match theme
+    for team, color in zip([home_team, away_team], colors):
         team_data = chart_data[chart_data['team'] == team]
-        fig.add_trace(go.Scatter(x=team_data['date'], y=team_data['elo'], mode='lines', name=team, line=dict(color=color)))
+        fig.add_trace(go.Scatter(x=team_data['date'], y=team_data['elo'], mode='lines', name=team, line=dict(color=color, width=3)))
     
-    fig.update_layout(height=350, margin=dict(l=20, r=20, t=20, b=20), hovermode="x unified")
+    fig.update_layout(
+        height=350, 
+        margin=dict(l=20, r=20, t=20, b=20), 
+        hovermode="x unified",
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#e0e0e0'),
+        xaxis=dict(showgrid=False, linecolor='#30363d'),
+        yaxis=dict(showgrid=True, gridcolor='#30363d', linecolor='#30363d')
+    )
     st.plotly_chart(fig, use_container_width=True)
+
+    # --- FOOTER ---
+    st.markdown('<div class="footer">(c) 2025 DON_GENIUS</div>', unsafe_allow_html=True)
