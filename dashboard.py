@@ -321,10 +321,7 @@ if df.empty:
 def load_model():
     model = xgb.XGBClassifier()
     # Try loading V5, fallback to V4
-    try:
-        model.load_model(config.MODEL_FILE)
-    except:
-        model.load_model("football_v4.json")
+    model.load_model(config.MODEL_FILE)
     return model
 
 def get_squad_stats(team_name):
@@ -381,7 +378,11 @@ with st.container():
         def_h, def_d, def_a = 2.00, 3.50, 3.80
         if odds_api_key:
             with st.spinner("Fetching live odds..."):
-                odds_df = odds_integration.fetch_live_odds(odds_api_key)
+                sport_key = "soccer_epl"
+                if selected_league == "La_Liga": sport_key = "soccer_spain_la_liga"
+                elif selected_league == "Bundesliga": sport_key = "soccer_germany_bundesliga"
+                
+                odds_df = odds_integration.fetch_live_odds(odds_api_key, sport_key)
                 match_odds = odds_integration.map_teams(home_team, away_team, odds_df)
                 if match_odds is not None:
                     def_h = match_odds['home_odd']
