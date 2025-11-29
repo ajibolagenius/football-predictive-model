@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
-load_dotenv()
+load_dotenv(override=True)
 
 # Database Connection
 DB_CONNECTION = os.getenv("DB_CONNECTION", "postgresql://postgres@localhost:5432/football_prediction_db")
