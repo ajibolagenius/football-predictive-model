@@ -4,7 +4,9 @@
 
 
 
+- [x] **Deployment**: User updated `.env` and `init_db.py` ran successfully. Database is live on Neon.
+
 ## 🚧 In Progress / Next Steps
-- [ ] **Deployment**: User needs to provide Neon Connection String in `.env` and run `scripts/init_db.py`.
+- [ ] **Data Population**: `etl_pipeline.py` is running to populate Neon DB.
+- [ ] **Player Data**: Run `scraper_players.py` after ETL finishes.
 - [ ] **Automated Backtesting**: Validate model performance.
-- [ ] **Passing Networks**: Research data sources.

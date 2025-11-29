@@ -46,6 +46,7 @@ home_odds DECIMAL(5,2),
 );
 
 -- Index for faster queries later
-CREATE INDEX idx_matches_date ON matches (date);
+-- Index for faster queries later
+CREATE INDEX IF NOT EXISTS idx_matches_date ON matches (date);
 
-CREATE INDEX idx_matches_teams ON matches (home_team_id, away_team_id);
+CREATE INDEX IF NOT EXISTS idx_matches_teams ON matches (home_team_id, away_team_id);

@@ -14,7 +14,8 @@ def init_db():
         "sql/schema.sql",
         "sql/schema_v2.sql",
         "sql/schema_v3.sql",
-        "sql/schema_v4.sql"
+        "sql/schema_v4.sql",
+        "sql/schema_v5.sql"
     ]
     
     with engine.connect() as conn:
