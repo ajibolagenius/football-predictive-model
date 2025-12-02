@@ -22,7 +22,7 @@ def get_env(key, default=None):
     return default
 
 # Database Connection
-DB_CONNECTION = get_env("DB_CONNECTION", "postgresql://postgres@localhost:5432/football_prediction_db")
+DB_CONNECTION = get_env("DB_CONNECTION", "postgresql://postgres:SupabaseOracle@db.xyrqkttjzuuykbwwaafk.supabase.co:5432/postgres")
 
 # API Keys
 ODDS_API_KEY = get_env("ODDS_API_KEY")
